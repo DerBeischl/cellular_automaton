@@ -10,6 +10,19 @@
 
 using namespace cellular_automaton;
 
+
+template<typename T>
+void assert_greater_zero(const T& value, const std::string_view error_text)
+{
+    if (value <= 0)
+    {
+
+        // Point of no return :)
+        std::cout << error_text << "\n";
+        exit(1);
+    }
+}
+
 template <typename T>
 bool integral_from_string_view(const std::string_view sv, T &res)
 {
@@ -42,6 +55,12 @@ int main(int argc, char **argv)
                               grid_size);
     integral_from_string_view(
         parser.get_argument("-state-duration").value_or("100"), state_duration);
+
+    // Validate input values.
+    assert_greater_zero(grid_width, "Width must be greater than 0.");
+    assert_greater_zero(grid_height, "Height must be greater than 0.");
+    assert_greater_zero(grid_size, "Grid size must be greater than 0.");
+    assert_greater_zero(state_duration, "State duration must be greater than 0.");
 
     std::default_random_engine generator;
     std::uniform_int_distribution<int> distribution(0, 1);
