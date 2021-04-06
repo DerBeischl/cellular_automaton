@@ -10,9 +10,33 @@
 
 using namespace cellular_automaton;
 
+// FIXME: Currently converts all images to bool only.
+// TODO: Build specializations for other types.
+template <typename T>
+void state_from_image(const sf::Image &image, State<T> &state)
+{
+    // Extract image dimensions.
+    auto [image_width, image_height] = image.getSize();
 
-template<typename T>
-void assert_greater_zero(const T& value, const std::string_view error_text)
+    // Find the dimensions of the rectanlge to which data is applied.
+    size_t min_width = std::min((size_t)image_width, state.width()),
+           min_height = std::min((size_t)image_width, state.width());
+
+    // Iterate data.
+    for (size_t y = 0; y < min_height; ++y)
+        for (size_t x = 0; x < min_width; ++x)
+        {
+
+            // Extract color channels.
+            auto [a, r, g, b] = image.getPixel(x, y);
+
+            // Convert to boolean depending on grayscale.
+            state(x, y) = ((r + g + b) / 3) < 128;
+        }
+}
+
+template <typename T>
+void assert_greater_zero(const T &value, const std::string_view error_text)
 {
     if (value <= 0)
     {
@@ -36,10 +60,13 @@ int main(int argc, char **argv)
 {
 
     // Create argparser.
+    // TODO: Consider making all of these optional with reasonable defaults.
     Argparse parser(
         "Run a cellular automaton with a ruleset in an interactive window.",
         {{"-w", "Number of world grid width."},
          {"-h", "Number of world grid height."},
+         {"-initial", "Path to an image file that contains the initial state.",
+          true},
          {"-grid_size", "Grid cell size in visualization.", true},
          {"-state_duration", "Tick simulation speed in milliseconds.", true}});
 
@@ -60,7 +87,28 @@ int main(int argc, char **argv)
     assert_greater_zero(grid_width, "Width must be greater than 0.");
     assert_greater_zero(grid_height, "Height must be greater than 0.");
     assert_greater_zero(grid_size, "Grid size must be greater than 0.");
-    assert_greater_zero(state_duration, "State duration must be greater than 0.");
+    assert_greater_zero(state_duration,
+                        "State duration must be greater than 0.");
+
+    // Create ruleset and state array.
+    Rule rule;
+    State<Rule::state_type> state(grid_width, grid_height);
+
+    // Check if initial state was given.
+    if (parser.get_argument("-initial").has_value())
+    {
+
+        // Initial state given. Load with sfml.
+        sf::Image initial_image;
+
+        // Make sure load was successfull.
+        if (not initial_image.loadFromFile(
+                parser.get_argument("-initial").value().data()))
+            exit(1);
+
+        // Fill state with image data.
+        state_from_image(initial_image, state);
+    }
 
     std::default_random_engine generator;
     std::uniform_int_distribution<int> distribution(0, 1);
@@ -69,8 +117,6 @@ int main(int argc, char **argv)
                             "Game of Life");
     window.setSize(
         sf::Vector2u(grid_width * grid_size, grid_height * grid_size));
-    Rule rule;
-    State<Rule::state_type> state(grid_width, grid_height);
 
     auto bool_to_color = [](const State<Rule::state_type> &state,
                             const size_t x, const size_t y) {
