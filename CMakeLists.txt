@@ -31,6 +31,7 @@ find_package(SFML COMPONENTS graphics window system REQUIRED)
 
 set(sources
     ./src/rule.cc
+    ./src/argparse.cc
 )
 
 add_executable(automaton

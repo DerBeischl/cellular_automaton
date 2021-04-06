@@ -1,30 +1,50 @@
 
+#include "argparse.hpp"
 #include "engine.hpp"
 #include "memory"
 #include "rule.hpp"
 #include "state.hpp"
+#include <charconv>
 #include <iostream>
 #include <random>
 
 using namespace cellular_automaton;
 
+template <typename T>
+bool integral_from_string_view(const std::string_view sv, T &res)
+{
+
+    // Do conversion and check success.
+    return std::from_chars(sv.data(), sv.data() + sv.size(), res).ec ==
+           std::errc::invalid_argument;
+}
+
 int main(int argc, char **argv)
 {
-    assert(((argc >= 3) || (argc <= 5)));
 
-    int grid_width = atoi(argv[1]);
-    int grid_height = atoi(argv[2]);
-    int grid_size = 15;
-    float state_durration = .1f;
+    // Create argparser.
+    Argparse parser(
+        "Run a cellular automaton with a ruleset in an interactive window.",
+        {{"-w", "Number of world grid width."},
+         {"-h", "Number of world grid height."},
+         {"-grid_size", "Grid cell size in visualization.", true},
+         {"-state_duration", "Tick simulation speed in milliseconds.", true}});
+
+    // Make sure args were parsed.
+    if (not parser.parse(argc, argv))
+        exit(1);
+
+    // Parse values. Some optional values have defaults.
+    int grid_width, grid_height, grid_size, state_duration;
+    integral_from_string_view(parser.get_argument("-w").value(), grid_width);
+    integral_from_string_view(parser.get_argument("-h").value(), grid_height);
+    integral_from_string_view(parser.get_argument("-grid_size").value_or("15"),
+                              grid_size);
+    integral_from_string_view(
+        parser.get_argument("-state-duration").value_or("100"), state_duration);
 
     std::default_random_engine generator;
     std::uniform_int_distribution<int> distribution(0, 1);
-
-    if (argc >= 4)
-        grid_size = atoi(argv[3]);
-
-    if (argc == 5)
-        state_durration = atof(argv[4]);
 
     sf::RenderWindow window(sf::VideoMode(grid_width, grid_height),
                             "Game of Life");
@@ -110,7 +130,7 @@ int main(int argc, char **argv)
             continue;
 
         rule.step(state);
-        sf::sleep(sf::seconds(state_durration));
+        sf::sleep(sf::milliseconds(state_duration));
 
         window.clear();
         window.draw(engine.step(state));

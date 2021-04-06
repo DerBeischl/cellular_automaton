@@ -23,8 +23,10 @@ template <typename T> class State
      */
     State(const size_t width, const size_t height)
         : width_(width), height_(height),
-          buffer_(std::shared_ptr<T>(new T[width * height], std::default_delete<T[]>())),
-          swap_buffer_(std::shared_ptr<T>(new T[width * height], std::default_delete<T[]>()))
+          buffer_(std::shared_ptr<T>(new T[width * height],
+                                     std::default_delete<T[]>())),
+          swap_buffer_(std::shared_ptr<T>(new T[width * height],
+                                          std::default_delete<T[]>()))
     {
         std::fill(buffer_.get(), buffer_.get() + width * height, 0);
         std::fill(swap_buffer_.get(), swap_buffer_.get() + width * height, 0);
