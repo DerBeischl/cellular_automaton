@@ -6,7 +6,7 @@
 #include <iostream>
 #include <random>
 
-using namespace gol;
+using namespace cellular_automaton;
 
 int main(int argc, char **argv)
 {

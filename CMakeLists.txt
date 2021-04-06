@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.19.3)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_STANDARD 17)
 
-project(game_of_life
+project(cellular_automaton
     VERSION 1.0
-    DESCRIPTION "A simple Game of Life"
+    DESCRIPTION "An implementation of various cellular automata"
     LANGUAGES CXX
 )
 
@@ -33,16 +33,16 @@ set(sources
     ./src/rule.cc
 )
 
-add_executable(gol
+add_executable(automaton
     "${sources}"
-    ./app/gol.cc
+    ./app/automaton.cc
 )
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    target_compile_options(gol PRIVATE /W4)
+    target_compile_options(automaton PRIVATE /W4)
 elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux" OR CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    target_compile_options(gol PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(automaton PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
-target_include_directories(gol PUBLIC ./include)
-target_link_libraries(gol sfml-graphics sfml-window sfml-system)
+target_include_directories(automaton PUBLIC ./include)
+target_link_libraries(automaton sfml-graphics sfml-window sfml-system)

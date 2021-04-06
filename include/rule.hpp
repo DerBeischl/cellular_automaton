@@ -2,7 +2,7 @@
 
 #include "state.hpp"
 
-namespace gol
+namespace cellular_automaton
 {
     class Rule
     {
@@ -12,4 +12,4 @@ namespace gol
             void step(State<state_type>& state);
 
     };
-}; 
+}

@@ -4,7 +4,7 @@
 #include "SFML/Graphics.hpp"
 #include "state.hpp"
 
-namespace gol
+namespace cellular_automaton
 {
     template<typename state_type>
     class Engine

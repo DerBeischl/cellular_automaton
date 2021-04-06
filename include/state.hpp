@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-namespace gol
+namespace cellular_automaton
 {   
     /**
      * @brief 
@@ -109,4 +109,4 @@ namespace gol
         size_t width_, height_;
         std::shared_ptr<T> buffer_, swap_buffer_;
     }; 
-};
+}

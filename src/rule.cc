@@ -1,7 +1,7 @@
 #include "rule.hpp"
 #include <iostream>
 
-namespace gol
+namespace cellular_automaton
 {
     size_t mod(int a, int b)
     {
