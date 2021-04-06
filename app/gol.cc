@@ -4,74 +4,113 @@
 #include "rule.hpp"
 #include "memory"
 #include <iostream>
+#include <random>
 
 using namespace gol;
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
-    assert((argc == 3));
+    assert(((argc >= 3) || (argc <= 5)));
 
     int grid_width = atoi(argv[1]);
     int grid_height = atoi(argv[2]);
+    int grid_size = 15;
+    float state_durration = .1f;
 
-    sf::RenderWindow window(sf::VideoMode(grid_width , grid_height ), "Game of Life");
-    window.setSize(sf::Vector2u(1500,1500));
+    std::default_random_engine generator;
+    std::uniform_int_distribution<int> distribution(0, 1);
+
+    if (argc >= 4)
+        grid_size = atoi(argv[3]);
+
+    if (argc == 5)
+        state_durration = atof(argv[4]);
+
+    sf::RenderWindow window(sf::VideoMode(grid_width, grid_height), "Game of Life");
+    window.setSize(sf::Vector2u(grid_width * grid_size, grid_height * grid_size));
     Rule rule;
     State<Rule::state_type> state(grid_width, grid_height);
 
-    state(51,51) = 1; 
-    state(52,51) = 1; 
-    state(51,52) = 1; 
-    state(53,54) = 1; 
-    state(54,54) = 1; 
-    state(54,53) = 1; 
-
-    state(32,31) = 1;
-    state(33,32) = 1; 
-    state(31,33) = 1; 
-    state(32,33) = 1; 
-    state(33,33) = 1; 
-
-    state(47,31) = 1; 
-    state(48,31) = 1; 
-    state(49,31) = 1; 
-    state(47,32) = 1; 
-    state(49,32) = 1; 
-    state(47,33) = 1; 
-    state(49,33) = 1; 
-    state(47,35) = 1; 
-    state(49,35) = 1; 
-    state(47,36) = 1; 
-    state(49,36) = 1; 
-    state(47,36) = 1; 
-    state(48,36) = 1; 
-    state(49,36) = 1; 
-
-    auto bool_to_color = [](const State<Rule::state_type>& state,
-                            const size_t x, const size_t y)
-    {
+    auto bool_to_color = [](const State<Rule::state_type> &state,
+                            const size_t x, const size_t y) {
         return sf::Color(state(x, y) * 255, state(x, y) * 255, state(x, y) * 255);
     };
 
     Engine<Rule::state_type> engine(+bool_to_color, grid_width, grid_height);
 
+    bool wait = true;
+
     while (window.isOpen())
     {
         sf::Event event;
-        while(window.pollEvent(event))
+        while (window.pollEvent(event))
         {
             if (event.type == sf::Event::Closed)
                 window.close();
+            
+            // Allows keyboard input durring use 
+            // Space: Start/Stop iteration, at the beginning it is set to Stop
+            // C = Clear: all cells will be set to 0 
+            // R = Random: every cell will be assigned either 1 or 0
+            if (event.type == sf::Event::KeyPressed)
+            {
+                switch(event.key.code)
+                {
+                    case sf::Keyboard::Space: 
+                        wait = !wait; 
+                        break; 
+                    
+                    case sf::Keyboard::C: 
+                        for (int i = 0; i < grid_width * grid_height; i++)
+                            state[i] = 0;
+                        window.clear();
+                        window.draw(engine.step(state));
+                        window.display();
+                        break; 
+                    
+                    case sf::Keyboard::R: 
+                        for (size_t i = 0; i < state.width(); i++)
+                            for (size_t k = 0; k < state.height(); k++)
+                                state(i, k) = distribution(generator);
+
+                        window.clear();
+                        window.draw(engine.step(state));
+                        window.display();
+                        break; 
+                    
+                    default: 
+                        break; 
+                }
+            }
+
+            // Draw cells
+            // left mouse button: set cell to 1 
+            // right mouse button: set cell to 0 
+            if (event.type == sf::Event::MouseButtonPressed)
+            {
+                if (event.mouseButton.button == sf::Mouse::Left)
+                {
+                    sf::Vector2i point = sf::Mouse::getPosition(window);
+                    state(point.x / grid_size, point.y / grid_size) = 1;
+                }
+                if (event.mouseButton.button == sf::Mouse::Right)
+                {
+                    sf::Vector2i point = sf::Mouse::getPosition(window);
+                    state(point.x / grid_size, point.y / grid_size) = 0;
+                }
+                window.clear();
+                window.draw(engine.step(state));
+                window.display();
+            }
         }
+        if (wait)
+            continue;
 
         rule.step(state);
-        sf::sleep(sf::seconds(.1f)); 
+        sf::sleep(sf::seconds(state_durration));
 
         window.clear();
         window.draw(engine.step(state));
-        window.display(); 
-
+        window.display();
     }
-
-
 }
